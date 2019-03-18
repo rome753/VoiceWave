@@ -31,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
     private VisualizerView mVisualizerView;
     private VisualizerView mVisualizerView2;
+    private SoundTexture mSoundTexture;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
         mVisualizerView = findViewById(R.id.vv);
         mVisualizerView2 = findViewById(R.id.vv2);
+        mSoundTexture = findViewById(R.id.st);
+
+
 
         new Thread() {
             @Override
@@ -80,13 +85,20 @@ public class MainActivity extends AppCompatActivity {
             public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes,
                                               int samplingRate) {
                 Log.e("chao", "mVisualizer onWaveFormDataCapture");
-                mVisualizerView.updateVisualizer(bytes);
+//                mVisualizerView.updateVisualizer(bytes);
+
 
             }
 
             public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
                 Log.e("chao", "mVisualizer onFftDataCapture");
-                mVisualizerView2.updateVisualizer(bytes);
+//                mVisualizerView2.updateVisualizer(bytes);
+                int max = -128;
+                for(byte b : bytes) {
+                    max = Math.max(max, (int)b);
+                }
+                Log.e("chao", "sound " + max);
+                mSoundTexture.update(max + 128);
 
             }
         }, Visualizer.getMaxCaptureRate() / 2, true, true);

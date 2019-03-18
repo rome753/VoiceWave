@@ -20,17 +20,17 @@ import java.util.Random;
  * Created by chao on 19-3-15.
  */
 
-public class WaveTexture extends TextureView implements TextureView.SurfaceTextureListener {
+public class SoundTexture extends TextureView implements TextureView.SurfaceTextureListener {
 
-    public WaveTexture(Context context) {
+    public SoundTexture(Context context) {
         this(context, null);
     }
 
-    public WaveTexture(Context context, @Nullable AttributeSet attrs) {
+    public SoundTexture(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         paint.setColor(Color.RED);
 
-        HandlerThread handlerThread = new HandlerThread("drawing");
+        final HandlerThread handlerThread = new HandlerThread("drawing");
         handlerThread.start();
 
         handler = new Handler(handlerThread.getLooper()) {
@@ -41,7 +41,7 @@ public class WaveTexture extends TextureView implements TextureView.SurfaceTextu
                 if(c != null) {
                     c.drawBitmap(mBitmap, 0, 0, null);
                     unlockCanvasAndPost(c);
-                    sendEmptyMessageDelayed(0, 10);
+                    sendEmptyMessageDelayed(0, 60);
                 }
             }
         };
@@ -50,7 +50,6 @@ public class WaveTexture extends TextureView implements TextureView.SurfaceTextu
     }
 
     int x = 0;
-    Random random = new Random();
     Paint paint = new Paint();
     int[] list;
 
@@ -73,11 +72,6 @@ public class WaveTexture extends TextureView implements TextureView.SurfaceTextu
     protected void drawOutside(Canvas canvas) {
         long time = System.currentTimeMillis();
         canvas.drawColor(Color.WHITE);
-        if(x > 0) {
-            list[x] = list[x - 1] + (random.nextBoolean() ? 1 : -1);
-        } else {
-            list[x] = random.nextInt(100) + 50;
-        }
         int i = 0;
         for(int j = x + 1; j < list.length; j++) {
             canvas.drawCircle(i++, list[j], 2, paint);
@@ -85,14 +79,18 @@ public class WaveTexture extends TextureView implements TextureView.SurfaceTextu
         for(int j = 0; j < x + 1; j++) {
             canvas.drawCircle(i++, list[j], 2, paint);
         }
-        x = (x + 1) % list.length;
         Log.e("chao", "drawOutside time " + (System.currentTimeMillis() - time));
     }
 
+    public void update(int val) {
+        x = (x + 1) % list.length;
+        list[x] = val * 5;
+//        handler.sendEmptyMessage(0);
+    }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        handler.sendEmptyMessage(0);
+        handler.sendEmptyMessageDelayed(0, 500);
     }
 
     @Override
@@ -102,7 +100,6 @@ public class WaveTexture extends TextureView implements TextureView.SurfaceTextu
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        handler.removeMessages(0);
         return false;
     }
 
