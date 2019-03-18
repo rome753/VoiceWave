@@ -19,6 +19,14 @@
             android:id="@+id/vv2"
             android:layout_width="match_parent"
             android:layout_height="100dp" />
+
+        <cc.rome753.myapplication.WaveTexture
+            android:layout_width="match_parent"
+            android:layout_height="200dp" />
+
+        
+
+
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
