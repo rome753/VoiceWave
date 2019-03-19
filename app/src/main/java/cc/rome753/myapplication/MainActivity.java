@@ -17,7 +17,8 @@ public class MainActivity extends AppCompatActivity {
     //指定音频源 这个和MediaRecorder是相同的 MediaRecorder.AudioSource.MIC指的是麦克风
     private static final int mAudioSource = MediaRecorder.AudioSource.MIC;
     //指定采样率 （MediaRecoder 的采样率通常是8000Hz AAC的通常是44100Hz。 设置采样率为44100，目前为常用的采样率，官方文档表示这个值可以兼容所有的设置）
-    private static final int mSampleRateInHz=44100 ;
+//    private static final int mSampleRateInHz=44100 ;
+    private static final int mSampleRateInHz=4096;
     //指定捕获音频的声道数目。在AudioFormat类中指定用于此的常量
     private static final int mChannelConfig= AudioFormat.CHANNEL_CONFIGURATION_MONO; //单声道
     //指定音频量化位数 ,在AudioFormaat类中指定了以下各种可能的常量。通常我们选择ENCODING_PCM_16BIT和ENCODING_PCM_8BIT PCM代表的是脉冲编码调制，它实际上是原始音频样本。
@@ -29,8 +30,6 @@ public class MainActivity extends AppCompatActivity {
     private AudioRecord mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,mSampleRateInHz,mChannelConfig,
             mAudioFormat, mBufferSizeInBytes);//创建AudioRecorder对象
 
-    private VisualizerView mVisualizerView;
-    private VisualizerView mVisualizerView2;
     private SoundTexture mSoundTexture;
 
     @Override
@@ -38,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mVisualizerView = findViewById(R.id.vv);
-        mVisualizerView2 = findViewById(R.id.vv2);
         mSoundTexture = findViewById(R.id.st);
 
 
@@ -93,15 +90,20 @@ public class MainActivity extends AppCompatActivity {
             public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
                 Log.e("chao", "mVisualizer onFftDataCapture");
 //                mVisualizerView2.updateVisualizer(bytes);
-                int max = -128;
-                for(byte b : bytes) {
-                    max = Math.max(max, (int)b);
+                int max = 0, index = 0;
+                int len = bytes.length / 2 + 1;
+                for(int i = 2; i < len; i+=2) {
+                    int amp = (int) Math.hypot(bytes[i], bytes[i + 1]);
+                    if(amp > max) {
+                        max = Math.max(max, amp);
+                        index = i;
+                    }
+
                 }
-                Log.e("chao", "sound " + max);
-                mSoundTexture.update(max + 128);
+                mSoundTexture.update(index * 8);
 
             }
-        }, Visualizer.getMaxCaptureRate() / 2, true, true);
+        }, Visualizer.getMaxCaptureRate() / 2, false, true);
         mVisualizer.setEnabled(true);
     }
 }

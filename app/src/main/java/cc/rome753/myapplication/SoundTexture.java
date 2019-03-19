@@ -29,6 +29,11 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
 
+        gridPaint.setColor(Color.BLUE);
+        gridPaint.setStyle(Paint.Style.FILL);
+        gridPaint.setStrokeWidth(1);
+        gridPaint.setTextSize(50);
+
         final HandlerThread handlerThread = new HandlerThread("drawing");
         handlerThread.start();
 
@@ -38,7 +43,7 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
                 setPath();
                 Canvas c = lockCanvas();
                 if(c != null) {
-                    c.drawColor(Color.WHITE);
+                    drawBackground(c);
                     c.drawPath(path, paint);
                     unlockCanvasAndPost(c);
                     sendEmptyMessageDelayed(0, 10);
@@ -55,6 +60,7 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
     int[] list;
 
     Handler handler;
+    Paint gridPaint = new Paint();
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -81,7 +87,7 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
 
     public void update(int val) {
         x = (x + 1) % list.length;
-        list[x] = val * 5;
+        list[x] = val;
     }
 
     @Override
@@ -102,5 +108,17 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
+    }
+
+    private void drawBackground(Canvas c) {
+        int w = getWidth();
+        c.drawColor(Color.WHITE);
+        int i = 0;
+        for(int tune : Tune.TUNES) {
+            c.drawLine(0, tune, w, tune + 1, gridPaint);
+            String name = Tune.NAMES[i];
+            c.drawText(name, 0, tune, gridPaint);
+            i = (i + 1) % Tune.NAMES.length;
+        }
     }
 }
