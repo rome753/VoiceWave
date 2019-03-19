@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -28,7 +29,8 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
 
     public SoundTexture(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(5);
 
         final HandlerThread handlerThread = new HandlerThread("drawing");
         handlerThread.start();
@@ -41,7 +43,7 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
                 if(c != null) {
                     c.drawBitmap(mBitmap, 0, 0, null);
                     unlockCanvasAndPost(c);
-                    sendEmptyMessageDelayed(0, 60);
+                    sendEmptyMessageDelayed(0, 10);
                 }
             }
         };
@@ -51,6 +53,7 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
 
     int x = 0;
     Paint paint = new Paint();
+    Path path = new Path();
     int[] list;
 
     Canvas mCanvas;
@@ -64,7 +67,7 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
         int h = getMeasuredHeight();
         if(list == null && w > 0) {
             list = new int[w];
-            mBitmap = Bitmap.createBitmap(w,h, Bitmap.Config.ARGB_8888);
+            mBitmap = Bitmap.createBitmap(w,h, Bitmap.Config.RGB_565);
             mCanvas = new Canvas(mBitmap);
         }
     }
@@ -72,20 +75,21 @@ public class SoundTexture extends TextureView implements TextureView.SurfaceText
     protected void drawOutside(Canvas canvas) {
         long time = System.currentTimeMillis();
         canvas.drawColor(Color.WHITE);
+        path.reset();
         int i = 0;
         for(int j = x + 1; j < list.length; j++) {
-            canvas.drawCircle(i++, list[j], 2, paint);
+            path.lineTo(i++, list[j]);
         }
         for(int j = 0; j < x + 1; j++) {
-            canvas.drawCircle(i++, list[j], 2, paint);
+            path.lineTo(i++, list[j]);
         }
+        canvas.drawPath(path, paint);
         Log.e("chao", "drawOutside time " + (System.currentTimeMillis() - time));
     }
 
     public void update(int val) {
         x = (x + 1) % list.length;
         list[x] = val * 5;
-//        handler.sendEmptyMessage(0);
     }
 
     @Override
