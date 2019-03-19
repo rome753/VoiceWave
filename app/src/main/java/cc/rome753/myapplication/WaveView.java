@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -24,13 +25,14 @@ public class WaveView extends View{
     public WaveView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         paint.setColor(Color.RED);
-        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
     }
 
     int x = 0;
     Random random = new Random();
     Paint paint = new Paint();
+    Path path = new Path();
     int[] list;
 
     @Override
@@ -45,6 +47,7 @@ public class WaveView extends View{
     @Override
     protected void onDraw(Canvas canvas) {
         long time = System.currentTimeMillis();
+        path.reset();
         if(x > 0) {
             list[x] = list[x - 1] + (random.nextBoolean() ? 1 : -1);
         } else {
@@ -52,11 +55,12 @@ public class WaveView extends View{
         }
         int i = 0;
         for(int j = x + 1; j < list.length; j++) {
-            canvas.drawPoint(i++, list[j], paint);
+            path.addCircle(i++, list[j], 1, Path.Direction.CW);
         }
         for(int j = 0; j < x + 1; j++) {
-            canvas.drawPoint(i++, list[j], paint);
+            path.addCircle(i++, list[j], 1, Path.Direction.CW);
         }
+        canvas.drawPath(path, paint);
         x = (x + 1) % list.length;
         invalidate();
         Log.e("chao", "draw time " + (System.currentTimeMillis() - time));
