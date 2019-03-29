@@ -11,6 +11,15 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
+
+import be.tarsos.dsp.AudioDispatcher;
+import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.io.android.AudioDispatcherFactory;
+import be.tarsos.dsp.pitch.PitchDetectionHandler;
+import be.tarsos.dsp.pitch.PitchDetectionResult;
+import be.tarsos.dsp.pitch.PitchProcessor;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,19 +50,40 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        new Thread() {
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                mAudioRecord.startRecording();
+//                initAudioTrack();
+//                initVisualizer();
+//                while(start && mAudioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+//                    byte[] buffer = new byte[mBufferSizeInBytes];
+//                    int result = mAudioRecord.read(buffer, 0, mBufferSizeInBytes);
+//                    mAudioTrack.write(buffer, 0, mBufferSizeInBytes);
+//                }
+//            }
+//        }.start();
+
+        AudioDispatcher dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050,1024,0);
+
+        PitchDetectionHandler pdh = new PitchDetectionHandler() {
             @Override
-            public void run() {
-                mAudioRecord.startRecording();
-                initAudioTrack();
-                initVisualizer();
-                while(start && mAudioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
-                    byte[] buffer = new byte[mBufferSizeInBytes];
-                    int result = mAudioRecord.read(buffer, 0, mBufferSizeInBytes);
-                    mAudioTrack.write(buffer, 0, mBufferSizeInBytes);
-                }
+            public void handlePitch(PitchDetectionResult result, AudioEvent e) {
+                final float pitchInHz = result.getPitch();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        TextView text = (TextView) findViewById(R.id.textView1);
+//                        text.setText("" + pitchInHz);
+
+                        mSoundTexture.update((int) pitchInHz);
+                    }
+                });
             }
-        }.start();
+        };
+        AudioProcessor p = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050, 1024, pdh);
+        dispatcher.addAudioProcessor(p);
+        new Thread(dispatcher,"Audio Dispatcher").start();
     }
 
     boolean start = true;
@@ -61,10 +91,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         start = false;
-        mVisualizer.setEnabled(false);
-        mVisualizer.release();
-        mAudioRecord.stop();
-        mAudioRecord.release();
+//        mVisualizer.setEnabled(false);
+//        mVisualizer.release();
+//        mAudioRecord.stop();
+//        mAudioRecord.release();
         super.onDestroy();
     }
 
